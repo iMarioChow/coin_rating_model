@@ -47,7 +47,7 @@ def clean_data(df):
     return df
 
 # Load existing backtest results
-results_file = "/Users/cyh/Desktop/coin_rating_model/data/updated_backtest_results.csv"
+results_file = "/Users/cyh/Desktop/coin_rating_model/data/backtest_results.csv"
 results_df = pd.read_csv(results_file)
 
 # Directory containing individual CSV files for each symbol
