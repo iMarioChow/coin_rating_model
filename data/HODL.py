@@ -47,11 +47,11 @@ def clean_data(df):
     return df
 
 # Load existing backtest results
-results_file = "/Users/cyh/Desktop/coin_rating_model/data/backtest_results.csv"
+results_file = "data/backtest_results.csv"
 results_df = pd.read_csv(results_file)
 
 # Directory containing individual CSV files for each symbol
-data_dir = "/Users/cyh/Desktop/coin_rating_model/data/data"
+data_dir = "data/data"
 
 # Function to run backtest and return all required metrics
 def get_backtest_metrics(symbol):
@@ -67,7 +67,8 @@ def get_backtest_metrics(symbol):
             'Calmar Ratio': np.nan,
             'Max. Drawdown [%]': np.nan,
             'Initial Price': np.nan,
-            'Equity Final [$]': np.nan
+            'Equity Final [$]': np.nan,
+            'Return (Ann.) [%]': np.nan
         }
     
     df = pd.read_csv(file_path)
@@ -84,22 +85,36 @@ def get_backtest_metrics(symbol):
             'Calmar Ratio': np.nan,
             'Max. Drawdown [%]': np.nan,
             'Initial Price': np.nan,
-            'Equity Final [$]': np.nan
+            'Equity Final [$]': np.nan,
+            'Return (Ann.) [%]': np.nan
         }
     
     bt = Backtest(df, BuyAndHold, cash=100000)
     stats = bt.run()
     
+    volatility_ann = stats['Volatility (Ann.) [%]']
+    sharpe_ratio = stats['Sharpe Ratio']
+    return_ann = stats['Return (Ann.) [%]']
+
+    # Handle infinite volatility
+    if np.isinf(volatility_ann):
+        volatility_ann = np.nan
+        sharpe_ratio = np.nan
+    # Recalculate Sharpe ratio if it's 0 and we have valid volatility
+    elif sharpe_ratio == 0 and not np.isnan(volatility_ann) and volatility_ann != 0:
+        sharpe_ratio = return_ann / volatility_ann
+    
     return {
         'Equity Peak [$]': stats['Equity Peak [$]'],
         'Return [%]': stats['Return [%]'],
-        'Volatility (Ann.) [%]': stats['Volatility (Ann.) [%]'],
-        'Sharpe Ratio': stats['Sharpe Ratio'],
+        'Volatility (Ann.) [%]': volatility_ann,
+        'Sharpe Ratio': sharpe_ratio,
         'Duration': (stats['End'] - stats['Start']).days,
         'Calmar Ratio': stats['Calmar Ratio'],
         'Max. Drawdown [%]': stats['Max. Drawdown [%]'],
         'Initial Price': df['Close'].iloc[0],
-        'Equity Final [$]': stats['Equity Final [$]']
+        'Equity Final [$]': stats['Equity Final [$]'],
+        'Return (Ann.) [%]': return_ann
     }
 
 # Apply the function to each symbol and update the DataFrame
